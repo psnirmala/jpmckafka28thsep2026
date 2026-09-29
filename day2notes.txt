@@ -1,0 +1,147 @@
+@KafkaListener -------marks a java method as a  kafka message consumer handler.
+
+Consumer Group:
+
+A consumer group guarantees that a message received by  one consumer of the group is not consumed  by
+another consumer of the same group.
+The partitions are equally  allocated to the consumers of the consumer group.
+ie if there are two consumers of the same group  running and if there are 4 partitions in a topic,
+two partitions  will be allocated to each consumer.
+
+
+A single  partition can not be shared multiple consumers of the same group.
+
+
+
+
+
+if there are 4 consumers of the same group  running and  there are 4 partitions in a topic,
+1 partition  will be allocated to each consumer.
+
+if there are 3 consumers of the same group  running and  there are 4 partitions in a topic,
+1 partition each will be allocated to two  consumers  and 2 partitions  will  be allocated   to the 
+third consumer.
+
+if there are 5 consumers of the same group  running and  there are 4 partitions in a topic,
+1 partition each will be allocated to 4  consumers  and the 5th consumer will be idle.
+
+offset:
+
+Offset is a unique sequential id assigned to each message in a partition.
+
+log-end-offset:
+
+The next offset to which a message will be published in a partition.
+
+current-offset:
+
+The next offset from which a consumer group will consume a message.
+This will have different values for different consumer groups based on the consumption of messages by the respective consumer group.
+
+lag = log_end_offset - current_offset 
+
+ie lag denotes the number of messages yet to be consumed by a consumer group
+
+
+A group is registered  with the topic when it consumes the first  message from the topic.
+
+By default, a newly registered group will consume only the latest messages.
+
+ie for a newly registered group, the log_end_offset and current_offset will be same.
+
+if you want a  newly registered group to consume all the older messages, the auto offset reset property should be set to earliest.
+
+
+kafka cluster:
+
+Collection of kafka brokers connected to the same zookeeper url.
+In the latest version,  it is collection kafka brokers connected to the same kafka controller quorum.
+
+A single topic can spread across multiple brokers.
+ie a topic is distributed across multiple brokers in the cluster.
+Each broker can contain a subset of partitions.
+Each partition is replicated in multiple brokers to support fault tolerance.
+The number of copies of partitions is decided based on the replication factor of the topic.
+
+Assume that there 5 brokers in the cluster and the topic contains 4 partitions with a replication factor of 3.
+
+sample distribution:
+
+broker-1-------0,1
+broker-2-------2,3,0
+broker-3-------1,2
+broker-4-------3,0
+broker-5-------1,2,3
+
+		broker.id	port	log-dir
+broker-1	   1		9091	c:/kafka-logs/broker-1
+broker-2	   2		9092	c:/kafka-logs/broker-2
+broker-3	   3		9093	c:/kafka-logs/broker-3
+
+steps:
+
+1. shutdown any zookeeper or kafka instances if they are running.
+
+2.  create 3 copies of %KAFKA_HOME%\config\server.properties and rename them as server-1.properties,server2.properties and server-3.properties respectively.
+
+3. modify broker.id, listeners and logs-dir properties in these files as per the above table.
+4. create 3 batch files namely start-server-1.bat,start-server-2.bat and  start-server-3.bat 
+under %KAFKA_HOME% directory.
+
+%KAFKA_HOME%\start-server-1.bat
+
+start "Server-1" kafka-server-start config\server-1.properties
+
+
+%KAFKA_HOME%\start-server-2.bat
+
+start "Server-2" kafka-server-start config\server-2.properties
+
+
+%KAFKA_HOME%\start-server-3.bat
+
+start "Server-3" kafka-server-start config\server-3.properties
+
+5.  clear the c:/tmp directory
+
+6. start the zookeeper.
+
+zookeeper-server-start c:\kafka_2.12-3.4.1\config\zookeeper.properties
+
+7. double click on start-server-1.bat, start-server-2.bat and start-server-3.bat to start the respective
+servers.
+
+
+
+specifying the url of any one broker of the cluster is equivalent to specifying the url of the entire  cluster.
+
+localhost:9091 is equivalent to localhost:9091,localhost:9092,localhost:9093
+
+
+Each partition is associated with 1 leader broker(also called a leader) which receives all read and write requests for that partition and 0 or more follower brokers(also called followers).
+The followers passively replicate from the leader.
+
+When the leader crashes, any one of the followers will be elected as the leader.
+
+ISR----In Sync Replicas-----Replicas which are in sync with the leader
+
+
+Kubernetes(k8s):
+Open source platform designed to automate deployment, scaling and management of containerized applications.
+
+Docker is used to isolate, package and containerize applications.
+Kubernetes  is an orchestration platform used to manage and scale these containers across a cluster of servers.
+
+Docker container is like a single host  and kubernetes provides multi node clusters of docker containers.
+
+Kubernetes restarts  failed containers and replaces dead nodes.
+
+Docker reads a Dockerfile , packages the application code and builds an image.
+Kubernetes pulls that image and deploys it across a distributed network of virtual machines,  managing its traffic , scaling and monitoring its operational health.
+
+
+
+
+
+
+

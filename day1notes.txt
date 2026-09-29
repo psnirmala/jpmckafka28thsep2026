@@ -1,0 +1,216 @@
+Webservice is a collection of encapsulated functions accessed over  internet.
+
+Two types:
+1. SOAP-------Exposes functionality
+2. REST-------Exposes data
+
+SOAP-----Simple Object Access Protocol
+REST-----Representational State Transfer
+
+1. Give Everything an ID----Each data available in the server is identified by a unique url
+
+
+
+
+2. Link things  together
+
+[
+{
+"id"101,
+"name":"Arjun",
+"designation":"Developer"
+},
+
+{
+"id"102,
+"name":"Deva",
+"designation":"Accountant"
+},
+..........
+]
+
+[
+{"employee1": "/employee/101"},
+{"employee2":"/employee/102"},
+.......
+]
+
+3. Data supports CRUD operations.
+	rdbms	REST
+C-------insert--POST--------After a POST  request,  a new url should be  created in the server side.
+R-------select--GET---------Using a GET request, data at an existing url is retrieved.
+U-------update--PUT---------After a PUT request, data at an existing url should be modified.
+D-------delete--DELETE------After a DELETE request , an  existing url should be removed.
+
+4. Support multiple representations.
+
+http://localhost:8080/employee/101
+
+Accept : application/json
+
+{
+"id":101,
+"name":"Arjun",
+"designation":"Developer"
+}
+
+
+Accept: application/xml
+
+<employee>
+	<id>101</id>
+	<name>Arjun</name>
+	<designation>Developer</designation>
+</employee>
+
+
+
+
+client---------controller----------service---------repository--------DB
+
+client tier	presentation	  business	   integration/dao
+
+
+client sends the request to the presentation tier(server side ui)---->presentation tier invokes the business  logic on the service layer(business  tier)----->service interacts with the repository to retrieve the data from the database
+
+repository exposes the data availabe  in the  database.
+
+java  persistence api(JPA)-----provides  an object oriented view
+
+In modern spring boot,if a class only one constructor, spring autowires it.
+
+
+
+REST Maturity Model:
+
+Level 0------http is used  as a transport mechaninsm
+Level 1------apis introduce  resource based urls
+Level 2------use http   methods and status codes correctly
+Level 3------use hateoas to guide clients
+
+
+Using verbs  in  the url, will technically work but it violates the core principles REST api  design.
+
+URLs represent resources(nouns) and HTTP methods represent the actions(verbs) performed on the resources.
+
+
+bad  examples of rest url		right examples
+
+GET api/getallusers			GET api/users
+POST  api/createuser			POST /api/users
+
+
+level 0  ------http  is a communication protocol
+level 1 --------resources + http verbs
+level 2---------resources + http verbs + http status codes
+level 3---------link things together (instead of list of data return their links)
+
+
+Kafka:
+
+Kafka is a message oriented middleware.
+
+It supports asynchronous communication.
+
+	Producer				  Consumer
+	Micro  Service-1--------->Kafka Topic--------->Micro Service-2
+
+Kafka uses a topic where  the  messages are stored.
+A  topic  is divided  into multiple partitions to support parallelism.
+Each  partition contains a group of related messages.
+Messages are also called events.
+
+Event Driven Architeture:
+
+Architecural Pattern where applications asynchronously communicate by producing and reacting to streams
+of events through centralized event streaming platform like kafka.
+
+Event--- record of state change or action like Order Placed or Payment Processed
+
+
+
+
+kafka  uses zookeeper service to store its meta data.
+
+Kafka Setup & verification:
+
+1. Download java 21 from https://www.oracle.com/java/technologies/javase/javase21-archive-downloads.html#license-lightbox and install it.
+
+2. set the JAVA_HOME environment variable.
+
+3. Download kafka 3.4.1 from https://archive.apache.org/dist/kafka/3.4.1/kafka_2.12-3.4.1.tgz and extract it to 
+c:\.
+
+4 sub directories under Kafka.
+
+bin-----------contains the binary scripts for unix flavours.
+bin\windows---contains the binary scripts for windows.
+
+libs----------kafka libraries in the form of jar files
+
+	jar-----java archive file
+config--------configuration files in the format of .properties.
+site-docs-----documentation
+
+4. set the KAFKA_HOME environment variable.
+
+5. Add %JAVA_HOME%\bin and %KAFKA_HOME%\bin\windows to the path.
+
+6. Start the zookeeper.
+
+Zookeeper is a service used by kafka to store its meta data like how many partitions in the topic, the consumer
+group details, offset information and etc.
+
+open a new command window and run the following command.
+
+zookeeper-server-start c:\kafka_2.12-3.4.1\config\zookeeper.properties
+
+zookeeper by default, runs at port 2181.
+
+7. Start the kafka server.
+open a new command window and run the following command.
+kafka-server-start c:\kafka_2.12-3.4.1\config\server.properties
+
+kafka server by default, runs at port 9092
+
+8. create a kafka topic.
+open a new command window and run the following command.
+
+kafka-topics --create --topic first-topic --partitions 4 --replication-factor 1 --bootstrap-server localhost:9092
+
+9. start a kafka console producer to send a message to the topic from the same command window used in 
+step 8.
+
+kafka-console-producer --topic first-topic --bootstrap-server localhost:9092
+
+10. start a kafka console consumer 
+
+start a kafka console consumer to consume messages from the topic.
+
+open a new command window and run the following command.
+
+kafka-console-consumer --topic first-topic --bootstrap-server localhost:9092
+
+
+
+When there are four partitions, 4 consumers of a consumer group can parallelly consume messages from the topic.
+Each consumer will be  allocation 1 partition.
+
+Partitions are numbered  from 0.
+If there are 4 partitions, the available partitions are 0,1,2 and 3.
+
+Each message in kafka contains 2 parts.
+
+1. key(optional)------all the messages  with same key go to the same partition.
+2. value--------------payload 
+
+default partitioning algorithm
+
+the partition to where the message goes=hashcode of the key %  no_of_partitions
+
+kafka guarantees that all the messages with the same key go to the same partition.
+
+The messages are stored in the topic in the form of byte[].
+
+object	serializer	byte[]    deserializer object
+producer------------>kafka topic------------>consumer

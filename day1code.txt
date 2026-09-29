@@ -1,0 +1,551 @@
+mysql> create database trainingdb;
+
+mysql> use   trainingdb;
+
+
+<!-- Source: https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>5.1.39</version>
+    <scope>compile</scope>
+</dependency>
+
+
+src/main/resources/application.properties
+
+spring.application.name=simple-rest
+spring.datasource.url=jdbc:mysql://localhost:3306/trainingdb
+spring.datasource.username=root
+spring.datasource.password=root
+#creates the tables if they are not already available
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+
+package com.jpmc.samplerest.domain;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+@Entity
+@Table(name="employee_tbl")
+public class Employee {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Integer id;
+        private String name;
+        private String designation;
+        
+        public Integer getId() {
+                return id;
+        }
+        public void setId(Integer id) {
+                this.id = id;
+        }
+        public String getName() {
+                return name;
+        }
+        public void setName(String name) {
+                this.name = name;
+        }
+        public String getDesignation() {
+                return designation;
+        }
+        public void setDesignation(String designation) {
+                this.designation = designation;
+        }
+
+
+        public Employee(Integer id, String name, String designation) {
+                super();
+                this.id = id;
+                this.name = name;
+                this.designation = designation;
+        }
+        public Employee() {
+                super();
+                // TODO Auto-generated constructor stub
+        }
+        
+        
+}
+
+
+
+
+package com.jpmc.samplerest.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.jpmc.samplerest.domain.Employee;
+
+public interface EmployeeRepository extends 
+JpaRepository<Employee, Integer>{
+
+}
+
+
+
+package com.jpmc.samplerest.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.jpmc.samplerest.domain.Employee;
+import com.jpmc.samplerest.repository.EmployeeRepository;
+
+@Service
+public class EmployeeService {
+        @Autowired
+        private EmployeeRepository repository;
+        
+        public Employee createEmployee(Employee employee) {
+                return repository.save(employee);
+        }
+
+        public List<Employee> getAllEmployees(){
+                return repository.findAll();
+        }
+        
+        public Optional<Employee> getEmployeeById(Integer id){
+                return repository.findById(id);
+        }
+        
+        public Employee updateEmployee(Integer id, Employee employee) {
+                Employee existingEmployee=repository.findById(id).orElseThrow(()->new RuntimeException("Employee not found"));
+                existingEmployee.setName(employee.getName());
+                existingEmployee.setDesignation(employee.getDesignation());
+                return repository.save(existingEmployee);
+        }
+        
+        public void deleteEmployee(Integer id) {
+                if(!repository.existsById(id)) {
+                        throw new RuntimeException("Employee not found");
+                }        
+                repository.deleteById(id);        
+                
+        }
+}
+
+
+package com.jpmc.samplerest.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.jpmc.samplerest.domain.Employee;
+import com.jpmc.samplerest.service.EmployeeService;
+
+@RestController
+@RequestMapping("/api/employees")
+public class EmployeeController {
+        @Autowired
+        private EmployeeService employeeService;
+        
+        @PostMapping
+        public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee){
+                Employee addedEmployee=employeeService.createEmployee(employee);
+                return new ResponseEntity<Employee>(addedEmployee, HttpStatus.CREATED);
+        }
+
+}
+
+
+mysql> show  tables;
+
+
+mysql> describe  employee_tbl;
+
+POST http://localhost:8080/api/employees
+
+Header: 
+    Content-Type 
+    
+Body
+
+{
+    "name":"Arvind",
+    "designation":"Developer"
+}    
+
+
+curl --location 'http://localhost:8080/api/employees' \
+--header 'Content-Type: application/json' \
+--data '{
+    "name":"Arvind",
+    "designation":"Developer"
+}'
+
+mysql> select  * from employee_tbl;
+
+package com.jpmc.samplerest.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.jpmc.samplerest.domain.Employee;
+import com.jpmc.samplerest.service.EmployeeService;
+
+@RestController
+@RequestMapping("/api/employees")
+public class EmployeeController {
+        
+        private final EmployeeService employeeService;
+        
+        
+        
+        public EmployeeController(EmployeeService employeeService) {
+                super();
+                this.employeeService = employeeService;
+        }
+
+
+
+        @PostMapping
+        public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee){
+                Employee addedEmployee=employeeService.createEmployee(employee);
+                return new ResponseEntity<Employee>(addedEmployee, HttpStatus.CREATED);
+        }
+
+}
+
+
+
+
+package com.jpmc.samplerest.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.jpmc.samplerest.domain.Employee;
+import com.jpmc.samplerest.repository.EmployeeRepository;
+
+@Service
+public class EmployeeService {
+        
+        private final EmployeeRepository repository;
+        
+        
+        
+        public EmployeeService(EmployeeRepository repository) {
+                super();
+                this.repository = repository;
+        }
+
+        public Employee createEmployee(Employee employee) {
+                return repository.save(employee);
+        }
+
+        public List<Employee> getAllEmployees(){
+                return repository.findAll();
+        }
+        
+        public Optional<Employee> getEmployeeById(Integer id){
+                return repository.findById(id);
+        }
+        
+        public Employee updateEmployee(Integer id, Employee employee) {
+                Employee existingEmployee=repository.findById(id).orElseThrow(()->new RuntimeException("Employee not found"));
+                existingEmployee.setName(employee.getName());
+                existingEmployee.setDesignation(employee.getDesignation());
+                return repository.save(existingEmployee);
+        }
+        
+        public void deleteEmployee(Integer id) {
+                if(!repository.existsById(id)) {
+                        throw new RuntimeException("Employee not found");
+                }        
+                repository.deleteById(id);        
+                
+        }
+}
+
+
+package com.jpmc.samplerest.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.jpmc.samplerest.domain.Employee;
+import com.jpmc.samplerest.service.EmployeeService;
+
+@RestController
+@RequestMapping("/api/employees")
+public class EmployeeController {
+        
+        private final EmployeeService employeeService;
+        
+        
+        
+        public EmployeeController(EmployeeService employeeService) {
+                super();
+                this.employeeService = employeeService;
+        }
+
+
+
+        @PostMapping
+        public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee){
+                Employee addedEmployee=employeeService.createEmployee(employee);
+                return new ResponseEntity<Employee>(addedEmployee, HttpStatus.CREATED);
+        }
+        
+        @GetMapping
+        public ResponseEntity<List<Employee>> getAllEmployees(){
+                return ResponseEntity.ok(employeeService.getAllEmployees());
+        }
+
+        @GetMapping("/{id}")
+        public ResponseEntity<Employee> getEmployeeById(@PathVariable Integer id){
+                return employeeService.getEmployeeById(id).map(ResponseEntity::ok)
+                                .orElse(ResponseEntity.notFound().build());
+        }
+        
+        @PutMapping("/{id}")
+        public ResponseEntity<Employee> updateEmployee(@PathVariable Integer id,
+                        @RequestBody Employee employee){
+                try {
+                Employee updatedEmployee= employeeService.updateEmployee(id, employee);
+                return ResponseEntity.ok(updatedEmployee);
+                }catch(RuntimeException ex) {
+                        return ResponseEntity.notFound().build();
+                }
+        }
+        
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteEmployee(@PathVariable Integer id
+                        ){
+                try {
+                employeeService.deleteEmployee(id);
+                return ResponseEntity.noContent().build();
+                }catch(RuntimeException ex) {
+                        return ResponseEntity.notFound().build();
+                }
+        }
+
+}
+
+
+
+package com.jpmc.samplerest.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.jpmc.samplerest.domain.Employee;
+import com.jpmc.samplerest.service.EmployeeService;
+
+@RestController
+@RequestMapping("/api/employees")
+public class EmployeeController {
+        
+        private final EmployeeService employeeService;
+        
+        
+        
+        public EmployeeController(EmployeeService employeeService) {
+                super();
+                this.employeeService = employeeService;
+        }
+
+
+
+        @PostMapping
+        public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee){
+                Employee addedEmployee=employeeService.createEmployee(employee);
+                return new ResponseEntity<Employee>(addedEmployee, HttpStatus.CREATED);
+        }
+        
+        @GetMapping
+        public CollectionModel<EntityModel<Employee>> getAllEmployees(){
+                 List<EntityModel<Employee>> employees= employeeService.getAllEmployees().stream()
+                                                                                         .map(employee->{
+                                                                                                 EntityModel<Employee> model=EntityModel.of(employee);
+                                                                                                 model.add(
+                                                                                                 linkTo(methodOn(EmployeeController.class).getEmployeeById(employee.getId()))
+                                                                                                                 .withSelfRel()
+                                                                                                 );
+                                                                                                 return model;
+                                                                                         }).toList();
+                 return CollectionModel.of(employees,
+                                 linkTo(methodOn(EmployeeController.class).getAllEmployees()).withSelfRel());
+        }
+
+        @GetMapping("/{id}")
+        public ResponseEntity<Employee> getEmployeeById(@PathVariable Integer id){
+                return employeeService.getEmployeeById(id).map(ResponseEntity::ok)
+                                .orElse(ResponseEntity.notFound().build());
+        }
+        
+        @PutMapping("{id}")
+        public ResponseEntity<Employee> updateEmployee(@PathVariable Integer id,
+                        @RequestBody Employee employee){
+                try {
+                Employee updatedEmployee= employeeService.updateEmployee(id, employee);
+                return ResponseEntity.ok(updatedEmployee);
+                }catch(RuntimeException ex) {
+                        return ResponseEntity.notFound().build();
+                }
+        }
+        
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteEmployee(@PathVariable Integer id
+                        ){
+                try {
+                employeeService.deleteEmployee(id);
+                return ResponseEntity.noContent().build();
+                }catch(RuntimeException ex) {
+                        return ResponseEntity.notFound().build();
+                }
+        }
+
+        
+        @GetMapping("/{id}/link")
+        public RepresentationModel<?> getEmployeeData(@PathVariable Integer id){
+                
+                
+                        RepresentationModel<?> model=new RepresentationModel<>();
+                   model.add(linkTo(methodOn(EmployeeController.class).getEmployeeById(id))
+                                                                                                                 .withRel("self")
+                                                                                                 );
+                return model;
+                                                                                         
+                 
+        }
+
+}
+
+
+
+zookeeper-server-start c:\kafka_2.12-3.4.1\config\zookeeper.properties
+
+kafka-server-start C:\kafka_2.12-3.4.1\config\server.properties
+
+
+kafka-topics --create --topic test-topic --partitions 4 --bootstrap-server localhost:9092
+
+kafka-console-producer --topic test-topic --bootstrap-server localhost:9092
+
+kafka-console-consumer --topic test-topic --bootstrap-server localhost:9092
+
+spring.application.name=sender-app
+server.port=8081
+spring.kafka.bootstrap-servers=localhost:9092
+
+package com.jpmc.sender.config;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
+
+@Configuration
+public class KafkaProducerConfig {
+        
+        @Bean
+        public ProducerFactory<String,String> producerFactory(){
+                Map<String, Object> config=new HashMap<>();
+                config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+                config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+                config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+                return new DefaultKafkaProducerFactory<>(config);
+        }
+        
+        @Bean
+        public KafkaTemplate<String, String> kafkaTemplate(){
+                return new KafkaTemplate<>(producerFactory());
+        }
+
+}
+
+
+package com.jpmc.sender.controller;
+
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/kafka")
+public class SenderController {
+        private final KafkaTemplate<String, String> template;
+
+        public SenderController(KafkaTemplate<String, String> template) {
+                super();
+                this.template = template;
+        }
+        
+        @PostMapping("/msg")
+        public String sendMessage(@RequestParam String message) {
+                template.send("test-topic",message);
+                return "message sent";
+        }
+
+}
+
+
+curl --location 'http://localhost:8081/kafka/msg' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data 'message=this is a test'
+
+https://github.com/psnirmala/jpmckafka28thsep2026.git
+
+
+
+
+
+
